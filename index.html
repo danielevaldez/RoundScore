@@ -27,16 +27,46 @@
             <div v-for="(round, index) in rounds" :key="index" class="round">
                 <h3>Round {{ index + 1 }}</h3>
                 <label>{{ fighter1Name }}:</label>
-                <input type="number" v-model="round.fighter1" min="0" max="10">
+                <input type="number" v-model="round.fighter1" min="0" max="10" @input="adjustScore(index, 1)">
                 <label>{{ fighter2Name }}:</label>
-                <input type="number" v-model="round.fighter2" min="0" max="10">
+                <input type="number" v-model="round.fighter2" min="0" max="10" @input="adjustScore(index, 2)">
+                <button class="remove-round" @click="removeRound(index)" v-if="rounds.length > 1">Remove</button>
             </div>
 
             <button @click="addRound">Add Round</button>
+            <button class="end-fight" @click="endFight">End Fight</button>
 
             <h2>Total Scores</h2>
             <p>{{ fighter1Name }}: {{ totalScore(1) }}</p>
             <p>{{ fighter2Name }}: {{ totalScore(2) }}</p>
+        </div>
+
+        <!-- Fight End Section -->
+        <div v-if="fightEnded" class="fight-end">
+            <h2>Fight Ended</h2>
+            <label>How did the fight end?</label>
+            <select v-model="fightEndType" @change="resetWinner">
+                <option value="KO">KO</option>
+                <option value="TKO">TKO</option>
+                <option value="Submission">Submission</option>
+                <option value="Decision">Decision</option>
+            </select>
+
+            <!-- Show winner selection if KO, TKO, or Submission -->
+            <div v-if="fightEndType !== 'Decision'">
+                <label>Select Winner:</label>
+                <select v-model="winner">
+                    <option :value="fighter1Name">{{ fighter1Name }}</option>
+                    <option :value="fighter2Name">{{ fighter2Name }}</option>
+                </select>
+            </div>
+
+            <button @click="declareWinner">Declare Winner</button>
+        </div>
+
+        <!-- Winner Display -->
+        <div v-if="winner">
+            <h2>Winner: {{ winner }} by {{ fightEndType }}</h2>
         </div>
     </div>
 
@@ -47,7 +77,10 @@
                     fighter1Name: "",
                     fighter2Name: "",
                     fightersSet: false,
-                    rounds: [{ fighter1: 10, fighter2: 9 }]
+                    rounds: [{ fighter1: 10, fighter2: 9 }],
+                    fightEnded: false,
+                    fightEndType: "Decision",
+                    winner: ""
                 };
             },
             methods: {
@@ -59,8 +92,39 @@
                 addRound() {
                     this.rounds.push({ fighter1: 10, fighter2: 9 });
                 },
+                removeRound(index) {
+                    if (this.rounds.length > 1) {
+                        this.rounds.splice(index, 1);
+                    }
+                },
                 totalScore(fighter) {
                     return this.rounds.reduce((sum, round) => sum + round[`fighter${fighter}`], 0);
+                },
+                endFight() {
+                    this.fightEnded = true;
+                },
+                resetWinner() {
+                    if (this.fightEndType === "Decision") {
+                        this.winner = "";
+                    }
+                },
+                declareWinner() {
+                    if (this.fightEndType === "Decision") {
+                        // Decide winner based on score
+                        const score1 = this.totalScore(1);
+                        const score2 = this.totalScore(2);
+                        this.winner = score1 > score2 ? this.fighter1Name : this.fighter2Name;
+                    }
+                },
+                adjustScore(index, fighter) {
+                    let round = this.rounds[index];
+                    if (fighter === 1) {
+                        if (round.fighter1 > 10) round.fighter1 = 10;
+                        if (round.fighter1 === 10) round.fighter2 = 9;
+                    } else {
+                        if (round.fighter2 > 10) round.fighter2 = 10;
+                        if (round.fighter2 === 10) round.fighter1 = 9;
+                    }
                 }
             }
         });

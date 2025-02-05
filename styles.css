@@ -1,12 +1,13 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
     margin: 0;
     background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    overflow-y: auto;
 }
 
 #app {
@@ -17,20 +18,21 @@ body {
     width: 90%;
     max-width: 400px;
     text-align: center;
+    margin-top: 20px;
 }
 
 .name-input {
     display: flex;
-    flex-direction: column;  /* Stack inputs and button vertically */
+    flex-direction: column;
     align-items: center;
-    gap: 10px; /* Adds spacing between elements */
+    gap: 10px;
 }
 
 input {
     margin: 5px;
     padding: 8px;
-    width: 100%; /* Makes input take full width of container */
-    max-width: 250px; /* Limits width so it doesn't stretch too much */
+    width: 100%;
+    max-width: 250px;
     text-align: center;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -52,6 +54,14 @@ button:hover {
     background: #0056b3;
 }
 
+.end-fight {
+    background: #dc3545;
+}
+
+.end-fight:hover {
+    background: #a71d2a;
+}
+
 .round {
     margin: 10px 0;
     padding: 10px;
@@ -59,7 +69,10 @@ button:hover {
     border-radius: 5px;
     background: #f9f9f9;
     display: flex;
-    flex-direction: column; /* Ensures each input is on a new line */
+    flex-direction: column;
     align-items: center;
     gap: 5px;
 }
+
+.fight-end {
+    margin-top: 20
