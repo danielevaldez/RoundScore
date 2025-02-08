@@ -9,6 +9,9 @@
 </head>
 <body>
     <div id="app">
+        <!-- Dark Mode Toggle Button -->
+        <button @click="toggleDarkMode" class="dark-mode-toggle">Dark Mode</button>
+
         <h1>RoundScore</h1>
 
         <!-- Fighter Name Input -->
@@ -52,7 +55,7 @@
                 <option value="Decision">Decision</option>
             </select>
 
-            <!-- Show winner selection if KO, TKO, or Submission -->
+            <!-- Winner selection if fight didn't go to decision -->
             <div v-if="fightEndType !== 'Decision'">
                 <label>Select Winner:</label>
                 <select v-model="winner">
@@ -66,8 +69,20 @@
 
         <!-- Winner Display -->
         <div v-if="winner">
-            <h2>Winner: {{ winner }} by {{ fightEndType }}</h2>
+            <h2>Winner: {{ winner === 'Draw' ? 'Draw' : winner + ' by ' + fightEndType }}</h2>
         </div>
+
+        <!-- Past Fights Section -->
+        <div v-if="pastFights.length">
+            <h2>Past Fights</h2>
+            <div v-for="(fight, index) in pastFights" :key="index" class="past-fight">
+                <h3>{{ fight.fighter1 }} vs {{ fight.fighter2 }}</h3>
+                <p>Final Score: {{ fight.fighter1 }} ({{ fight.score1 }}) - {{ fight.fighter2 }} ({{ fight.score2 }})</p>
+                <p>Winner: {{ fight.winner }} by {{ fight.method }}</p>
+            </div>
+        </div>
+
+        <button @click="newFight" v-if="fightEnded">Start New Fight</button>
     </div>
 
     <script>
@@ -80,7 +95,9 @@
                     rounds: [{ fighter1: 10, fighter2: 9 }],
                     fightEnded: false,
                     fightEndType: "Decision",
-                    winner: ""
+                    winner: "",
+                    pastFights: [],
+                    darkMode: localStorage.getItem("darkMode") === "enabled"
                 };
             },
             methods: {
@@ -93,28 +110,7 @@
                     this.rounds.push({ fighter1: 10, fighter2: 9 });
                 },
                 removeRound(index) {
-                    if (this.rounds.length > 1) {
-                        this.rounds.splice(index, 1);
-                    }
-                },
-                totalScore(fighter) {
-                    return this.rounds.reduce((sum, round) => sum + round[`fighter${fighter}`], 0);
-                },
-                endFight() {
-                    this.fightEnded = true;
-                },
-                resetWinner() {
-                    if (this.fightEndType === "Decision") {
-                        this.winner = "";
-                    }
-                },
-                declareWinner() {
-                    if (this.fightEndType === "Decision") {
-                        // Decide winner based on score
-                        const score1 = this.totalScore(1);
-                        const score2 = this.totalScore(2);
-                        this.winner = score1 > score2 ? this.fighter1Name : this.fighter2Name;
-                    }
+                    this.rounds.splice(index, 1);
                 },
                 adjustScore(index, fighter) {
                     let round = this.rounds[index];
@@ -125,6 +121,49 @@
                         if (round.fighter2 > 10) round.fighter2 = 10;
                         if (round.fighter2 === 10) round.fighter1 = 9;
                     }
+                },
+                totalScore(fighter) {
+                    return this.rounds.reduce((total, round) => total + (fighter === 1 ? round.fighter1 : round.fighter2), 0);
+                },
+                endFight() {
+                    this.fightEnded = true;
+                },
+                resetWinner() {
+                    this.winner = "";
+                },
+                declareWinner() {
+                    if (this.fightEndType === "Decision") {
+                        let score1 = this.totalScore(1);
+                        let score2 = this.totalScore(2);
+                        this.winner = score1 > score2 ? this.fighter1Name : score1 < score2 ? this.fighter2Name : "Draw";
+                    }
+                    this.pastFights.push({
+                        fighter1: this.fighter1Name,
+                        fighter2: this.fighter2Name,
+                        score1: this.totalScore(1),
+                        score2: this.totalScore(2),
+                        winner: this.winner,
+                        method: this.fightEndType
+                    });
+                },
+                newFight() {
+                    this.fighter1Name = "";
+                    this.fighter2Name = "";
+                    this.fightersSet = false;
+                    this.rounds = [{ fighter1: 10, fighter2: 9 }];
+                    this.fightEnded = false;
+                    this.fightEndType = "Decision";
+                    this.winner = "";
+                },
+                toggleDarkMode() {
+                    this.darkMode = !this.darkMode;
+                    localStorage.setItem("darkMode", this.darkMode ? "enabled" : "disabled");
+                    document.body.classList.toggle("dark-mode", this.darkMode);
+                }
+            },
+            mounted() {
+                if (this.darkMode) {
+                    document.body.classList.add("dark-mode");
                 }
             }
         });
